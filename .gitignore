@@ -1,0 +1,12 @@
+# Binaries
+collision_engine
+*.o
+*.exe
+
+# Python
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.vs/
