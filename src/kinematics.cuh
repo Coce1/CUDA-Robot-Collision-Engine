@@ -5,14 +5,19 @@
 struct Vec3 {
     float x, y, z;
     __host__ __device__ Vec3(float x_ = 0, float y_ = 0, float z_ = 0) : x(x_), y(y_), z(z_) {}
+    
+    __host__ __device__ Vec3 operator+(const Vec3& o) const { return Vec3(x + o.x, y + o.y, z + o.z); }
+    __host__ __device__ Vec3 operator-(const Vec3& o) const { return Vec3(x - o.x, y - o.y, z - o.z); }
 };
 
 struct Mat4x4 {
     float m[4][4];
 
     __host__ __device__ static Mat4x4 identity() {
-        Mat4x4 res = {0};
-        for (int i = 0; i < 4; ++i) res.m[i][i] = 1.0f;
+        Mat4x4 res;
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+                res.m[i][j] = (i == j) ? 1.0f : 0.0f;
         return res;
     }
 
@@ -31,11 +36,14 @@ struct Mat4x4 {
     }
 
     __host__ __device__ Mat4x4 operator*(const Mat4x4& o) const {
-        Mat4x4 res = {0};
-        for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
+        Mat4x4 res;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                res.m[i][j] = 0.0f;
                 for (int k = 0; k < 4; ++k)
                     res.m[i][j] += m[i][k] * o.m[k][j];
+            }
+        }
         return res;
     }
 };
@@ -44,4 +52,20 @@ struct Capsule {
     Vec3 p0;
     Vec3 p1;
     float radius;
+};
+
+// Modèle DH d'un bras 6-DDL
+struct DHParam {
+    float a;
+    float alpha;
+    float d;
+};
+
+__constant__ DHParam c_dh_params[6] = {
+    {0.0f,   1.5707963f, 0.25f},
+    {0.35f,  0.0f,       0.0f},
+    {0.30f,  0.0f,       0.0f},
+    {0.0f,   1.5707963f, 0.10f},
+    {0.0f,  -1.5707963f, 0.10f},
+    {0.0f,   0.0f,       0.08f}
 };
